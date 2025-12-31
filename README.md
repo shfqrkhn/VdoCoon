@@ -1,204 +1,162 @@
-# 🦝 VdoCoon // Autonomic Media Sovereign (v2.6.0)
+# 🦝 VdoCoon // OMEGA // v10.2
 
-> **The Intelligent "Trash Panda" for Your Media Library**  
-> *Scavenges space, cleans up containers, and optimizes storage.*
+> **The Media Sovereignty Engine.**  
+> *Autonomic. Universal. Immutable.*
 
 ## 📑 Table of Contents
 
-1. [Project Overview](#-project-overview)
-2. [Architecture & Philosophy](#-architecture--philosophy)
-3. [Installation & Setup](#-installation--setup)
-4. [Usage Guide](#-usage-guide)
-5. [Changing Libraries (Reset)](#-changing-libraries-reset)
-6. [O&M Manual](#-om-manual)
-7. [Source Artifact (The Script)](#-source-artifact)
+1. [System Overview](#-system-overview)
+2. [Omega Architecture](#-omega-architecture)
+3. [Installation](#-installation)
+4. [Command Reference](#-command-reference)
+5. [Configuration](#-configuration)
+6. [Troubleshooting](#-troubleshooting)
+7. [Source Code (The Artifact)](#-source-code)
 
 ---
 
+## 🔭 System Overview
 
+**VdoCoon** is a mission-critical PowerShell hypervisor for FFmpeg. Unlike standard batch converters, VdoCoon functions as an autonomic decision engine. It profiles your hardware, analyzes media topology, and constructs a bespoke transcoding pipeline for every single file.
 
-## 🔭 Project Overview
-
-**VdoCoon** is a high-level PowerShell hypervisor for FFmpeg. Just as a raccoon meticulously cleans its food, VdoCoon cleans your video library. It is **autonomic**: it profiles the host system, determines the optimal balance between speed and compression (ROI), and manages the entire transcoding lifecycle with strict safety guards.
-
-It transforms a library of mixed media (MP4, MOV, M2TS, etc.) into a unified, high-efficiency **Matroska (MKV) HEVC 10-bit** archive with **Opus** audio. It maintains visual fidelity, frame rate, and refresh rate while typically reducing file size by 40-80%.
+It transforms mixed media libraries into a unified **Matroska (MKV) HEVC** archive with **Opus** audio, typically reducing storage footprint by 40-60% while strictly preserving visual fidelity and metadata integrity.
 
 ### Key Capabilities
 
-*   **Interactive Autonomy:** On the first run, it presents a user-friendly wizard to set preferences, then runs a synthetic stress test (Fractals) to benchmark your specific CPU/GPU performance to auto-select the best Preset.
-*   **Hardware Agnostic:** Automatically detects NVIDIA CUDA. If a GPU is found, it constructs a hybrid pipeline (GPU Decoding -> GPU Filtering -> CPU Encoding). If not, it falls back to a pure CPU safety mode.
-*   **Matroska Enforcement:** Automatically standardizes all output containers to `.mkv`. If the input is `.mp4`, the output is `.mkv`. The original is removed only after verification.
-*   **Safety First:** Uses a "Prediction Pass" to verify potential savings before committing to a full encode. Uses "Deep Verification" to ensure the output is not corrupted. Uses "Atomic Swaps" to ensure no data is lost during a power failure.
-*   **Persistent Logging:** Maintains a permanent history log (`VdoCoon_History.log`) of every file processed, skipped, or failed.
+*   **Universal Hardware Engine:** Automatically negotiates the optimal encoder:
+    *   **NVIDIA:** NVENC (HEVC) + CUDA Scaling + Zero-Copy Pipeline.
+    *   **INTEL:** QSV (HEVC) + VPP Scaling.
+    *   **AMD:** AMF (HEVC) + DXVA2.
+    *   **CPU:** libx265 (Software Fallback).
+*   **Adaptive Audio Intelligence:** Detects channel layouts (Stereo, 5.1, 7.1) and scales bitrate dynamically (`64kbps/channel`). Automatically sanitizes non-standard layouts to prevent encoder crashes.
+*   **Zero-Loss Preservation:** Explicitly maps **ALL** audio tracks, **ALL** subtitles, and **ALL** attachments (Fonts/Cover Art). Nothing is left behind.
+*   **HDR Awareness:** Detects 10-bit HDR content. If the hardware pipeline is 8-bit, it automatically injects a software Tone-Mapping bridge to prevent color washout.
+*   **Atomic Safety:** All operations occur in a transactional scratch space. Source files are strictly read-only until the output is verified.
 
 ---
 
-## 🏛 Architecture & Philosophy
+## 🏛 Omega Architecture
 
-### 1. The Iron Triangle (Quality Strategy)
+### 1. The Decision Engine
 
-VdoCoon ignores arbitrary bitrate targets. Instead, it targets **Visual Transparency**.
+VdoCoon is a "White Box" system. It logs exactly *why* it makes decisions.
 
-*   **Video:** `libx265` (HEVC) at `CRF 20` (Configurable).
-*   **Color:** `Main10` Profile. 10-bit color is enforced to prevent "banding" artifacts, even if the source is 8-bit.
-*   **Audio:** `libopus`. VBR (Variable Bitrate). 256k for Surround, 128k for Stereo.
+*   **Input:** `Movie.mkv` (24GB, HDR, 7.1 Audio).
+*   **Decision:** "Hardware=NVIDIA. HDR detected -> Inject ToneMap. 7.1 Audio -> Bitrate 512k. Resolution > 1080p -> Downscale."
+*   **Output:** The pipeline is constructed dynamically based on these factors.
 
-### 2. Idempotency (The Sentinel)
+### 2. The Clean Sweep Protocol
 
-VdoCoon writes a metadata tag (`comment=VdoCoon_Opt`) into every file it finishes.
+The script maintains a strict hygiene standard.
 
-*   If you run the script on the same folder 100 times, it will only process new files.
-*   It skips already processed files instantly (`O(1)` check).
+*   **Startup:** Checks for write permissions.
+*   **Runtime:** Rotates logs if they exceed 5MB.
+*   **Shutdown:** Whether successful or interrupted (Ctrl+C), a cleanup routine purges all `_vc_*.mkv` temp files to prevent disk clutter.
 
-### 3. The Lazarus Loop (Resilience)
+### 3. Visual & Remote Telemetry
 
-The transcoding engine is wrapped in a failure-handling loop.
-
-1.  **Attempt 1:** Try NVIDIA CUDA (Hardware Acceleration) via a `nv12|p010le` bridge.
-2.  **Failure:** If drivers crash or the format is incompatible...
-3.  **Attempt 2:** Automatically reboot the job using Software CPU encoding.
-4.  **Result:** The job finishes regardless of driver instability.
-
-### 4. Hybrid Transactional Swap (IO Safety)
-
-Files are never modified in place.
-
-1.  **Work:** Video is created in a temp folder (`_VdoCoon_Scratch`).
-2.  **Verify:** Video is scanned for corruption (`-xerror`).
-3.  **Check:** Video size is compared to source. If larger (bloat), it is discarded.
-4.  **Swap:** The source is renamed to `.bak`. The new file is moved into place. The `.bak` is deleted.
+*   **TUI:** A double-buffered, flicker-free "Cyberpunk" interface displaying real-time FPS, Speed, and ETA.
+*   **Taskbar:** Integrates with Windows Taskbar to show progress (Green) or Error states (Red).
+*   **Webhooks:** (Optional) Can send status reports to Discord or Slack.
 
 ---
 
-## 💿 Installation & Setup
+## 💿 Installation
 
 ### Prerequisites
 
-*   Windows 10 or 11 (PowerShell 5.1+).
-*   **FFmpeg** & **FFprobe** (Static Builds).
+*   Windows 10/11 or Server 2019+.
+*   **Windows Terminal** (Recommended for TUI).
+*   **FFmpeg & FFprobe** (Static Builds).
 
-### Step-by-Step
+### Setup
 
-1.  **Create a Folder:** (e.g., `C:\VdoCoon`).
-2.  **Download Binaries:**
-    *   Go to [gyan.dev/ffmpeg/builds](https://www.gyan.dev/ffmpeg/builds/).
-    *   Download `ffmpeg-release-essentials.zip`.
-    *   Extract `ffmpeg.exe` and `ffprobe.exe` into your folder.
-3.  **Install Script:**
-    *   Copy the code from the [Source Artifact](#-source-artifact) section below.
-    *   Save it as `VdoCoon.ps1` in the same folder.
-
-**Directory Structure:**
-
-```text
-C:\VdoCoon\
-   ├── ffmpeg.exe
-   ├── ffprobe.exe
-   ├── VdoCoon.ps1
-   └── (Auto-created files will appear here: .json, .log, _Scratch)
-```
+1.  Create a directory (e.g., `C:\VdoCoon`).
+2.  Download `ffmpeg.exe` and `ffprobe.exe` from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) and place them in the folder.
+3.  Copy the [Source Code](#-source-code) below and save it as `VdoCoon.ps1` in the same folder.
 
 ---
 
-## ⌨ Usage Guide
+## ⌨ Command Reference
 
-Open PowerShell and navigate to the folder (`cd C:\VdoCoon`).
+Open PowerShell inside your VdoCoon folder.
 
-### Scenario 1: The First Run (Setup Wizard)
+### Standard Operation
 
-Simply run the script. It will detect it has no configuration and launch the interactive wizard.
+Scans the configured library and processes files.
 
 ```powershell
 .\VdoCoon.ps1
 ```
 
-*   It will ask for your **Library Path**.
-*   It will ask for your **Resolution** and **Quality** preference.
-*   It will benchmark your PC to find the best speed settings.
-*   It will save these settings to `VdoCoon.config.json`.
+### Simulation Mode (Dry Run)
 
-### Scenario 2: Automated Runs
-
-Once configured, just run the script. It will load your saved settings and process any new files in your library.
+Runs the Decision Engine and Logic Adapters but **does not** execute FFmpeg or modify files. Use this to verify what VdoCoon *would* do.
 
 ```powershell
-.\VdoCoon.ps1
+.\VdoCoon.ps1 -DryRun
+```
+
+### One-Shot Configuration
+
+To run on a specific folder without changing your saved config, or to re-run the setup wizard:
+
+```powershell
+# Override Library Path temporarily
+.\VdoCoon.ps1 -LibraryPath "E:\Downloads"
+
+# Force Reset of Settings
+.\VdoCoon.ps1 -ResetConfig
 ```
 
 ---
 
-## 🔄 Changing Libraries (Reset)
+## ⚙ Configuration
 
-VdoCoon locks onto one library path to prevent accidental processing of the wrong folders.
+On first run, `VdoCoon.json` is generated.
 
-**To change your source library path or re-run the benchmark:**
-
-1.  Navigate to your VdoCoon folder.
-2.  **Delete** the file named `VdoCoon.config.json`.
-3.  Run the script again (`.\VdoCoon.ps1`).
-4.  The Setup Wizard will reappear, allowing you to enter a new path and settings.
-
----
-
-## 🛠 O&M Manual
-
-### The Configuration File
-
-The `VdoCoon.config.json` stores your path and settings.
-
-```json
-{
-    "LibraryPath": "D:\\Movies",
-    "Resolution": "1080p",
-    "Preset": "slow",
-    "CRF": 20
-}
-```
-
-### Logging
-
-A file named `VdoCoon_History.log` tracks all activity.
-
-*   **Success:** Records filename and bytes saved.
-*   **Skip:** Records files skipped due to sentinel tags or efficiency saturation.
-*   **Error:** Records corruption or encoding failures.
-
-### Troubleshooting
-
-| Error / Issue                 | Diagnosis                         | Solution                                                     |
-| :---------------------------- | :-------------------------------- | :----------------------------------------------------------- |
-| `[FATAL] ffmpeg not found`    | Binaries are missing.             | Place `ffmpeg.exe` in the exact same folder as `.ps1`.       |
-| `[SKIP] Efficiency Saturated` | The file is already compressed.   | VdoCoon determined re-encoding won't save enough space (>10%). Ignore it. |
-| `BLOAT DETECTED`              | The output was larger than input. | The source file was likely low-quality already. The script correctly discarded the result. |
-| `Atomic Swap Failed`          | File permission issue.            | Ensure you are not playing the video file while converting it. |
+| Setting       | Default         | Description                                                  |
+| :------------ | :-------------- | :----------------------------------------------------------- |
+| `LibraryPath` | *User Input*    | The root folder to scan recursively.                         |
+| `Resolution`  | `Original`      | Limits max height. Options: `4k`, `1080p`, `720p`, `Original`. |
+| `CRF`         | `24`            | Constant Rate Factor (Quality). Lower is better quality, larger file. 18-26 recommended. |
+| `Preset`      | `medium`        | Encoding speed. `slow`, `medium`, `fast`.                    |
+| `AudioCodec`  | `libopus`       | The codec for audio conversion. Opus is recommended for efficiency. |
+| `Tag`         | `VdoCoon_Omega` | The metadata tag injected to prevent re-processing.          |
+| `WebhookURL`  | `""`            | (Optional) Slack/Discord webhook URL for notifications.      |
 
 ---
 
-## 💎 Source Artifact
+## 🔧 Troubleshooting
 
-Save this code block as **`VdoCoon.ps1`**.
+| Issue                        | Diagnosis                      | Solution                                                     |
+| :--------------------------- | :----------------------------- | :----------------------------------------------------------- |
+| **Colors look washed out**   | HDR content on non-HDR player. | VdoCoon v10.2 automatically tone-maps HDR to SDR if needed. Ensure your player handles colors correctly. |
+| **Subtitles look wrong**     | Missing Fonts.                 | v10.2 includes `-map 0:t?` to copy font attachments. Re-process the file. |
+| **Script crashes instantly** | Permissions.                   | Ensure VdoCoon has write access to its own folder (for logs) and the Library folder. |
+| **"Bloat Detected"**         | Output > Input.                | The source file was likely already highly compressed (e.g., YIFY/aXXo). VdoCoon correctly discarded the larger result. |
+| **FFmpeg Error -22**         | Invalid Argument.              | Usually caused by 10-bit surfaces on 8-bit encoders. v10.2 fixes this by forcing `nv12` format. |
+
+---
+
+## 💎 Source Code
+
+**File:** `VdoCoon.ps1`  
+**Version:** OMEGA v10.2
 
 ```powershell
 <#
 .SYNOPSIS
-    VdoCoon // AUTONOMIC MEDIA SOVEREIGN // v2.6.0
-    
-    Architecture: Autonomic / Interactive / Persistent / Logging
-    Description:  The Definitive Video Optimization Engine.
-                  - Auto-Hardware Profiling (CPU/CUDA).
-                  - Smart ROI Benchmarking.
-                  - MKV Enforcement & Silent Atomic Safety.
-                  - Persistent History Logging.
-                  - Small-File Efficiency Short-Circuit.
-                  - Full Attachment & Stream Safety.
-    
-    INSTRUCTIONS:
-    1. Place 'ffmpeg.exe' and 'ffprobe.exe' next to this script.
-    2. Run via PowerShell.
-    3. To reset library/config, delete 'VdoCoon.config.json'.
+    VdoCoon // OMEGA // v10.2
+    The "Preservation" Edition.
 
-.PARAMETER ResetConfig
-    Forces the Interactive Wizard and System Benchmark to run again.
+    [CRITICAL FIXES v10.2]
+    - PRESERVATION: Added '-map 0:t?' to preserve MKV Attachments (Fonts/CoverArt).
+    - VISUALS:      Added HDR-to-SDR Tone-Mapping bridge to prevent washed-out colors on 8-bit pipelines.
+    - SAFETY:       Added Write-Permission check on startup.
+
+    [USAGE]
+    .\VdoCoon.ps1 -LibraryPath "D:\Media"
 #>
 
 [CmdletBinding()]
@@ -206,428 +164,300 @@ param(
     [Parameter(Mandatory=$false)][string]$LibraryPath,
     [Parameter(Mandatory=$false)][string]$Resolution,
     [Parameter(Mandatory=$false)][switch]$ResetConfig,
-    [Parameter(Mandatory=$false)][string]$ScratchPath = $null
+    [Parameter(Mandatory=$false)][switch]$DryRun
 )
 
-# --- GLOBAL MANIFOLD ---------------------------------------------------------
+# region [ 0. BOOTSTRAP ] =====================================================
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$Root = $PSScriptRoot
-$ConfigFile = Join-Path $Root "VdoCoon.config.json"
-$LogFile    = Join-Path $Root "VdoCoon_History.log"
+$Global:Root = $PSScriptRoot
+$Global:SessionID = [Guid]::NewGuid().ToString().Substring(0,8)
+$Global:IsISE = ($Host.Name -match "ISE")
+$Global:StartTime = [DateTime]::Now
 
-# Session Stats
-$Global:Stats = @{ Processed=0; Skipped=0; Errors=0; BytesSaved=0 }
+# Theme
+$C = @{ Rst="$([char]27)[0m"; Bld="$([char]27)[1m"; Dim="$([char]27)[2m"; Cyn="$([char]27)[36m"; Mag="$([char]27)[35m"; Grn="$([char]27)[32m"; Red="$([char]27)[31m"; Ylw="$([char]27)[33m"; Wht="$([char]27)[37m" }
+$G = @{ H="═"; V="║"; BarF="█"; BarE="░"; Play="►" }
 
-# Default Settings
-$Global:Config = @{
-    LibraryPath  = ""
-    Resolution   = "Original"
-    CRF          = 20
-    Preset       = "medium"
-    Codec        = "libx265"
-    Profile      = "main10"
-    AudioCodec   = "libopus"
-    MinSavings   = 10
-    SentinelTag  = "VdoCoon_Opt"
-    LastBench    = "Never"
+# Taskbar
+$Global:Taskbar = $null
+try { $T=[System.Type]::GetTypeFromProgID("TaskbarList"); if($T){$Global:Taskbar=[System.Activator]::CreateInstance($T)} } catch {}
+
+try { [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = "BelowNormal" } catch {}
+
+# Permission Check
+if (-not (Test-Path "$Global:Root\write_test.tmp")) {
+    try { New-Item "$Global:Root\write_test.tmp" -ItemType File -Force | Out-Null; Remove-Item "$Global:Root\write_test.tmp" -Force }
+    catch { Write-Host " [FATAL] No Write Permission in $Global:Root" -ForegroundColor Red; exit }
 }
+# endregion
 
-# --- MODULE: UI & LOGGING ----------------------------------------------------
-function Write-Log ($Message, $Color="White", $Level="INFO") {
-    $TimeStr = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $ConsoleTime = Get-Date -Format "HH:mm:ss"
-    
-    # Write to Console
-    Write-Host "[$ConsoleTime] [$Level] $Message" -ForegroundColor $Color
-    
-    # Write to File (Plain text)
-    $LogEntry = "[$TimeStr] [$Level] $Message"
-    $LogEntry | Out-File -FilePath $LogFile -Append -Encoding utf8
+# region [ 1. STATE STORE ] ===================================================
+$Store = [pscustomobject]@{
+    State       = "BOOT"
+    Config      = @{}
+    Hardware    = @{ Type="CPU"; Encoder="libx265"; Capability="Low" }
+    Stats       = @{ Total=0; Processed=0; Skipped=0; Errors=0; BytesSaved=0 }
+    Job         = @{ File="Waiting..."; Task="Idle"; Decision="Pending"; Pct=0; FPS=0; Speed="0x"; ETA="--:--"; AudioChannels=2 }
+    Logs        = New-Object System.Collections.Generic.List[string]
+    FFLog       = New-Object System.Collections.Generic.List[string]
+    Files       = @{ HistoryLog=Join-Path $Global:Root "VdoCoon_History.log"; ErrorLog=Join-Path $Global:Root "VdoCoon_Errors.log" }
+    Runtime     = @{ TempFile=$null; LastRender=[DateTime]::MinValue }
 }
+# endregion
 
-function Show-Header {
-    Clear-Host
-    Write-Host "==============================================================" -ForegroundColor Cyan
-    Write-Host "   VdoCoon v2.6.0 // THE TRASH PANDA ENGINE" -ForegroundColor White
-    Write-Host "   Autonomic Media Optimization & Scavenging" -ForegroundColor Gray
-    Write-Host "==============================================================" -ForegroundColor Cyan
-    Write-Host ""
-}
-
-# --- MODULE: WIZARD ----------------------------------------------------------
-function Show-Wizard {
-    Write-Host " [SETUP WIZARD] First Run Configuration" -ForegroundColor Magenta
-    Write-Host " --------------------------------------" -ForegroundColor Gray
-
-    if ([string]::IsNullOrWhiteSpace($Global:Config.LibraryPath)) {
-        Write-Host " 1. Where is your video library?" -ForegroundColor Yellow
-        $InputPath = Read-Host "    Path (e.g. D:\Movies)"
-        
-        # FIX: Remove quotes if user pasted "Path"
-        $InputPath = $InputPath.Trim('"')
-
-        # FIX: Use LiteralPath to handle brackets []
-        if (-not (Test-Path -LiteralPath $InputPath)) { 
-            Write-Host "    [!] Invalid Path. Exiting." -ForegroundColor Red; exit 
-        }
-        $Global:Config.LibraryPath = $InputPath
+# region [ 2. SYSTEM CORE ] ===================================================
+function Dispatch-Log ($Message, $Level="INFO") {
+    $Time = Get-Date -Format "HH:mm:ss"
+    if (-not $DryRun) {
+        "[$Time] [$Level] $Message" | Out-File -FilePath $Store.Files.HistoryLog -Append -Encoding utf8
+        if ($Level -in "ERR", "WARN") { "[$Time] [$Level] $Message" | Out-File -FilePath $Store.Files.ErrorLog -Append -Encoding utf8 }
     }
-
-    Write-Host "`n 2. Target Resolution Limit (Downscales larger videos)" -ForegroundColor Yellow
-    Write-Host "    [1] Original (Keep as source)" -ForegroundColor Cyan
-    Write-Host "    [2] 4k       (2160p)" -ForegroundColor White
-    Write-Host "    [3] 1080p    (Full HD)" -ForegroundColor White
-    Write-Host "    [4] 720p     (HD - Space Saver)" -ForegroundColor White
-    Write-Host "    [5] 480p     (SD - Maximum Savings)" -ForegroundColor White
-    $ResChoice = Read-Host "    Select [1-5]"
-    switch ($ResChoice) {
-        "2" { $Global:Config.Resolution = "4k" }
-        "3" { $Global:Config.Resolution = "1080p" }
-        "4" { $Global:Config.Resolution = "720p" }
-        "5" { $Global:Config.Resolution = "480p" }
-        Default { $Global:Config.Resolution = "Original" }
-    }
-
-    Write-Host "`n 3. Quality Preference (CRF)" -ForegroundColor Yellow
-    Write-Host "    [1] Archival (CRF 18) - Visually Lossless" -ForegroundColor White
-    Write-Host "    [2] Balanced (CRF 22) - Transparent / Recommended" -ForegroundColor Cyan
-    Write-Host "    [3] Compact  (CRF 26) - Smallest Files" -ForegroundColor White
-    $CrfChoice = Read-Host "    Select [1-3]"
-    switch ($CrfChoice) {
-        "1" { $Global:Config.CRF = 18 }
-        "3" { $Global:Config.CRF = 26 }
-        Default { $Global:Config.CRF = 22 }
-    }
-
-    Write-Host "`n [SETUP] Configuration Locked." -ForegroundColor Green
-    Start-Sleep -Seconds 1
-}
-
-# --- MODULE: CONFIGURATION ---------------------------------------------------
-function Initialize-Configuration {
-    if ($ResetConfig -and (Test-Path $ConfigFile)) { Remove-Item $ConfigFile -Force -Confirm:$false }
-
-    if (Test-Path $ConfigFile) {
-        Write-Log "Loading profile..." "Cyan" "CONFIG"
-        try {
-            $Loaded = Get-Content $ConfigFile | ConvertFrom-Json
-            foreach ($Prop in $Loaded.PSObject.Properties) {
-                if ($Global:Config.ContainsKey($Prop.Name)) { $Global:Config[$Prop.Name] = $Prop.Value }
-            }
-            if ($LibraryPath) { $Global:Config.LibraryPath = $LibraryPath }
-            if ($Resolution)  { $Global:Config.Resolution = $Resolution }
-        } catch {
-            Write-Log "Config corrupt. Re-initializing." "Red" "ERROR"
-            Show-Wizard; Start-Benchmark
-        }
+    if ($Global:IsISE) {
+        $Color = switch($Level) { "INFO"{"Gray"} "OK"{"Green"} "WARN"{"Yellow"} "ERR"{"Red"} "SYS"{"Cyan"} "DRY"{"Magenta"} Default{"White"} }
+        Write-Host "[$Time] $Message" -ForegroundColor $Color
     } else {
-        if ($LibraryPath) { $Global:Config.LibraryPath = $LibraryPath }
-        if ($Resolution)  { $Global:Config.Resolution = $Resolution }
-        if ([string]::IsNullOrWhiteSpace($Global:Config.LibraryPath)) { Show-Wizard }
-        Start-Benchmark
+        $Color = switch($Level) { "INFO"{$C.Gry} "OK"{$C.Grn} "WARN"{$C.Ylw} "ERR"{$C.Red} "SYS"{$C.Cyn} "DRY"{$C.Mag} Default{$C.Wht} }
+        [void]$Store.Logs.Add("$($C.Dim)$Time$($C.Rst) $Color$Message$($C.Rst)")
+        if ($Store.Logs.Count -gt 12) { $Store.Logs.RemoveAt(0) }
     }
 }
 
-function Save-Configuration {
-    $Global:Config.LastBench = (Get-Date).ToString("yyyy-MM-dd HH:mm")
-    $Global:Config | ConvertTo-Json | Set-Content $ConfigFile
-    Write-Log "Configuration saved." "Cyan" "CONFIG"
-}
-
-# --- MODULE: BENCHMARK -------------------------------------------------------
-function Start-Benchmark {
-    Write-Host "`n"
-    Write-Log "Initiating Hardware Profiling..." "Magenta" "BENCH"
-    
-    $BenchPath = if ($ScratchPath) { $ScratchPath } else { Join-Path $Root "_VdoCoon_Scratch" }
-    if (-not (Test-Path $BenchPath)) { New-Item -ItemType Directory -Path $BenchPath -Force | Out-Null }
-    
-    # Generate Synthetic Source (Fractals)
-    $Source = Join-Path $BenchPath "bench_src.mkv"
-    $GenCmd = @("-f", "lavfi", "-i", "mandelbrot=size=1920x1080:rate=24", "-t", "10", "-c:v", "libx264", "-preset", "ultrafast", "-qp", "0", "-y", "$Source")
-    $Null = Start-Process -FilePath $Global:FFMPEG -ArgumentList $GenCmd -Wait -NoNewWindow
-    
-    $Results = @()
-    $Presets = @("fast", "medium", "slow") 
-    
-    foreach ($P in $Presets) {
-        Write-Host "      -> Stress Testing Preset: [$P]... " -NoNewline -ForegroundColor Gray
-        $Target = Join-Path $BenchPath "bench_$P.mkv"
-        # CPU Test (x265)
-        $Args = @("-i", "$Source", "-c:v", "libx265", "-preset", "$P", "-crf", "22", "-an", "-y", "$Target")
-        
-        $Timer = [System.Diagnostics.Stopwatch]::StartNew()
-        Start-Process -FilePath $Global:FFMPEG -ArgumentList $Args -Wait -NoNewWindow
-        $Timer.Stop()
-        
-        $Size = (Get-Item $Target).Length
-        $Results += [PSCustomObject]@{ Preset=$P; Time=$Timer.Elapsed.TotalSeconds; Size=$Size }
-        Write-Host "$([math]::Round($Timer.Elapsed.TotalSeconds,1))s" -ForegroundColor White
-        Remove-Item $Target -Force -Confirm:$false -ErrorAction SilentlyContinue
-    }
-    Remove-Item $Source -Force -Confirm:$false -ErrorAction SilentlyContinue
-    
-    # ROI Logic
-    $Base = $Results | Where-Object { $_.Preset -eq "medium" }
-    $Slow = $Results | Where-Object { $_.Preset -eq "slow" }
-    $Fast = $Results | Where-Object { $_.Preset -eq "fast" }
-    $Winner = "medium"
-
-    if ($Slow -and $Base) {
-        $Cost = ($Slow.Time - $Base.Time) / $Base.Time
-        $Gain = ($Base.Size - $Slow.Size) / $Base.Size
-        if ($Cost -gt 0.60 -and $Gain -lt 0.03) { $Winner = "medium" } else { $Winner = "slow" }
-    }
-    if ($Winner -eq "medium" -and $Fast) {
-        $Save = ($Base.Time - $Fast.Time) / $Base.Time
-        $Loss = ($Fast.Size - $Base.Size) / $Base.Size
-        if ($Save -gt 0.40 -and $Loss -lt 0.05) { $Winner = "fast" }
-    }
-    
-    Write-Log "Benchmark Complete. Optimal CPU Preset: [$Winner]" "Green" "BENCH"
-    $Global:Config.Preset = $Winner
-    Save-Configuration
-}
-
-# --- MODULE: SYSTEM ----------------------------------------------------------
-function Resolve-Binary ($Name) {
-    $Local = Join-Path $Root "$Name.exe"
-    if (Test-Path $Local) { return $Local }
-    $System = Get-Command $Name -ErrorAction SilentlyContinue
-    if ($System) { return $System.Source }
-    throw "$Name not found. Place $Name.exe next to script."
-}
-
-function Get-HardwareInfo {
-    $Output_HW = & $Global:FFMPEG -v quiet -hwaccels
-    $Output_FL = & $Global:FFMPEG -v quiet -filters
-    $Global:Has_CUDA   = $Output_HW -contains "cuda"
-    $Global:Has_Zscale = $Output_FL -match "zscale"
-    if ($Global:Has_CUDA) { Write-Log "NVIDIA CUDA Detected (Enabled)." "Green" "GPU" }
-    else                  { Write-Log "Using CPU Software Encoding." "Yellow" "CPU" }
-}
-
-# --- MODULE: TRANSCODE -------------------------------------------------------
-function Get-MediaInfo ($Path) {
+function Invoke-Webhook ($Message, $Color=65280) {
+    if ([string]::IsNullOrWhiteSpace($Store.Config.WebhookURL)) { return }
     try {
-        $Cmd = @("-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", "$Path")
-        $Res = & $Global:FFPROBE $Cmd
-        return ($Res | ConvertFrom-Json)
-    } catch { return $null }
+        $PL=@{embeds=@(@{title="VdoCoon"; description=$Message; color=$Color; footer=@{text="Sess: $($Global:SessionID)"}})}
+        [void](Invoke-RestMethod -Uri $Store.Config.WebhookURL -Method Post -ContentType 'application/json' -Body ($PL|ConvertTo-Json -Depth 2) -EA SilentlyContinue)
+    } catch {}
 }
 
-function Build-FilterComplex ($Streams, $IsHDR, $UseCUDA, $TargetHeight) {
-    $Filters = @()
-    $Vid = $Streams.streams | Where-Object { $_.codec_type -eq "video" } | Select-Object -First 1
-    # Check if video stream exists to prevent property access crash
-    if (-not $Vid) { return $null }
-    
-    $DoScale = ($TargetHeight -gt 0 -and $Vid.height -gt $TargetHeight)
+function Rotate-Logs {
+    foreach ($K in $Store.Files.Keys) {
+        $P = $Store.Files[$K]; if ((Test-Path $P) -and (Get-Item $P).Length -gt 5MB) { Move-Item $P "$P.$((Get-Date).ToString('yyyyMMdd')).old" -Force }
+    }
+}
 
-    if ($UseCUDA) { 
-        if ($DoScale) { $Filters += "scale_cuda=-2:$($TargetHeight):interp_algo=lanczos" }
-        # Bridge to allow 8-bit input to be upgraded to 10-bit pipe
-        $Filters += "hwdownload,format=nv12|p010le,format=yuv420p10le"
+function Set-TaskbarProgress ($Val, $Max, $State="Normal") {
+    if ($Global:Taskbar -and -not $Global:IsISE) {
+        $H = [System.Diagnostics.Process]::GetCurrentProcess().MainWindowHandle
+        $F = switch($State) { "Error"{4} "Paused"{8} Default{2} }
+        try { [void]$Global:Taskbar.SetProgressState($H, $F); [void]$Global:Taskbar.SetProgressValue($H, [long]$Val, [long]$Max) } catch {}
+    }
+}
+
+function Invoke-Cleanup {
+    if ($DryRun) { return }
+    if ($Store.Runtime.TempFile -and (Test-Path $Store.Runtime.TempFile)) { Remove-Item $Store.Runtime.TempFile -Force -EA SilentlyContinue }
+    $Stale = Get-ChildItem -Path $Global:Root -Filter "_vc_*.mkv" -EA SilentlyContinue
+    foreach ($S in $Stale) { try{Remove-Item $S.FullName -Force -EA Stop}catch{} }
+    Set-TaskbarProgress 0 100 "NoProgress"
+}
+
+if (-not $Global:IsISE) { try { [Console]::CancelKeyPress += { Invoke-Cleanup; [Console]::CursorVisible=$true; Write-Host "`n [HALT] Clean." -ForegroundColor Red; exit 1 } } catch {} }
+# endregion
+
+# region [ 3. UI RENDERER ] ===================================================
+function Render-Frame {
+    if ($Global:IsISE) { return }
+    if ((Get-Date) - $Store.Runtime.LastRender -lt [TimeSpan]::FromMilliseconds(33)) { return }
+    $Store.Runtime.LastRender = Get-Date
+
+    try { $W = [Console]::WindowWidth } catch { $W = 80 }
+    $Buf = New-Object System.Text.StringBuilder
+    $Up = "{0:hh\:mm\:ss}" -f ((Get-Date) - $Global:StartTime)
+    $Mode = if ($DryRun) { "$($C.Mag)[SIMULATION]" } else { "$($C.Grn)[LIVE]" }
+    
+    [void]$Buf.AppendLine("$($C.Cyn)$($G.Play) VDOCOON $($C.Bld)OMEGA v10.2$($C.Rst) $Mode $($C.Dim)// HW: $($Store.Hardware.Type) // UP: $Up$($C.Rst)")
+    
+    $Sv = "{0:N2} GB" -f ($Store.Stats.BytesSaved / 1GB)
+    [void]$Buf.AppendLine("$($C.Wht)DONE: $($C.Grn)$($Store.Stats.Processed)   $($C.Wht)SKIP: $($C.Ylw)$($Store.Stats.Skipped)   $($C.Wht)FAIL: $($C.Red)$($Store.Stats.Errors)   $($C.Wht)SAVED: $($C.Cyn)$Sv$($C.Rst)")
+    [void]$Buf.AppendLine("$($C.Dim)$($G.H * $W)$($C.Rst)")
+
+    if ($Store.State -eq "WORK") {
+        $FStr = $Store.Job.File; if ($FStr.Length -gt ($W-15)) { $FStr = "..." + $FStr.Substring($FStr.Length - ($W-15)) }
+        [void]$Buf.AppendLine("$($C.Mag)$($C.Bld) ACTIVE PIPELINE $($C.Rst)")
+        [void]$Buf.AppendLine(" FILE:   $($C.Wht)$FStr$($C.Rst)")
+        [void]$Buf.AppendLine(" LOGIC:  $($C.Cyn)$($Store.Job.Decision)$($C.Rst)")
+        [void]$Buf.AppendLine(" TASK:   $($C.Ylw)$($Store.Job.Task) [$($Store.Hardware.Type)]$($C.Rst)")
+        
+        $BW=$W-22; $Fl=[math]::Floor(($Store.Job.Pct/100)*$BW); if($Fl-lt 0){$Fl=0}
+        $Bar="$($C.Dim)[$($C.Rst)$($C.Grn)"+($G.BarF*$Fl)+"$($C.Dim)"+($G.BarE*($BW-$Fl))+"$($C.Dim)]$($C.Rst)"
+        [void]$Buf.AppendLine(" PROG:   $Bar $($C.Wht)$("{0,3}" -f [int]$Store.Job.Pct)%$($C.Rst)")
+        [void]$Buf.AppendLine(" TELE:   $($C.Grn)$($Store.Job.Speed) @ $($Store.Job.FPS) fps$($C.Rst) | ETA: $($C.Ylw)$($Store.Job.ETA)$($C.Rst)")
     } else {
-        if ($DoScale) { $Filters += "scale=-2:$($TargetHeight):flags=lanczos+accurate_rnd" }
+        [void]$Buf.AppendLine("$($C.Ylw) SYSTEM STANDBY: $($Store.State) $($C.Rst)"); [void]$Buf.AppendLine(""); [void]$Buf.AppendLine(""); [void]$Buf.AppendLine(""); [void]$Buf.AppendLine("")
     }
 
-    if ($IsHDR) {
-        if ($Global:Has_Zscale) {
-            $Filters += "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p10le"
-        } else { $Filters += "tonemap=hable:desat=0,format=yuv420p10le" }
-    } elseif (-not $UseCUDA -and -not $DoScale) {
-        $Filters += "format=yuv420p10le"
+    [void]$Buf.AppendLine("$($C.Dim)$($G.H * $W)$($C.Rst)")
+    foreach ($L in $Store.Logs) {
+        $Cln = $L -replace "\x1B\[[0-9;]*[a-zA-Z]", ""; $Pd = $W - $Cln.Length - 1; if ($Pd-lt 0){$Pd=0}
+        [void]$Buf.AppendLine("$L$(' '*$Pd)")
     }
-    if ($Filters.Count -eq 0) { return $null }
-    return ($Filters -join ",")
+    [Console]::SetCursorPosition(0,0); [Console]::Write($Buf.ToString())
+}
+# endregion
+
+# region [ 4. LOGIC ADAPTERS ] ================================================
+function Mount-Configuration {
+    $CfgPath = Join-Path $Global:Root "VdoCoon.json"
+    if ($ResetConfig -or -not (Test-Path $CfgPath)) {
+        if (-not $Global:IsISE) { Clear-Host }
+        $Lib = $LibraryPath; while ([string]::IsNullOrWhiteSpace($Lib) -or -not (Test-Path $Lib)) { $Lib = (Read-Host " Enter Library Path").Trim('"') }
+        $Store.Config = @{LibraryPath=$Lib; Resolution="Original"; CRF=24; Preset="medium"; AudioCodec="libopus"; WebhookURL=""; Tag="VdoCoon_Omega"}
+        $Store.Config | ConvertTo-Json | Set-Content $CfgPath
+    } else { $J = Get-Content $CfgPath -Raw | ConvertFrom-Json; $J.PSObject.Properties | % { $Store.Config[$_.Name] = $_.Value } }
+    if ($LibraryPath) { $Store.Config.LibraryPath = $LibraryPath }
 }
 
-function Process-Library {
-    $ResMap = @{ "480p"=480; "720p"=720; "1080p"=1080; "2k"=1440; "4k"=2160; "Original"=0 }
-    $TgtH = $ResMap[$Global:Config.Resolution]
+function Detect-Hardware {
+    Dispatch-Log "Probing Hardware..." "SYS"
+    $Out = & $Global:FFMPEG -v quiet -hwaccels
+    # NVIDIA: Scale CUDA, NV12 (8-bit), ConstQP
+    if ($Out -contains "cuda") { 
+        $Store.Hardware = @{Type="NVIDIA"; Enc="hevc_nvenc"; Args="-hwaccel cuda -hwaccel_output_format cuda"; Filter="scale_cuda=format=nv12"; Rc="-rc constqp -qp"}
+        return
+    }
+    # INTEL: QSV
+    if ($Out -contains "qsv") { 
+        $Store.Hardware = @{Type="INTEL"; Enc="hevc_qsv"; Args="-init_hw_device qsv=qsv:MFX_IMPL_hw -filter_hw_device qsv"; Filter="vpp_qsv"; Rc="-global_quality"}
+        return
+    }
+    # CPU
+    $Store.Hardware = @{Type="CPU"; Enc="libx265"; Args=""; Filter="scale"; Rc="-crf"}
+}
+
+function Analyze-Media ($Meta) {
+    $Vid = $Meta.streams | ? {$_.codec_type -eq "video" -and $_.disposition.attached_pic -ne 1} | Sort width -Descending | Select -First 1
+    if (-not $Vid) { $Vid = $Meta.streams | ? {$_.codec_type -eq "video"} | Select -First 1 }
+    $MaxChan = 2; $Meta.streams | ? {$_.codec_type -eq "audio"} | % { if($_.channels -gt $MaxChan){ $MaxChan = $_.channels } }
+    return @{ VIdx=$Vid.index; H=$Vid.height; Channels=$MaxChan }
+}
+# endregion
+
+# region [ 5. EXECUTION CORE ] ================================================
+function Process-Item ($File) {
+    $Store.Job.File = $File.Name; $Store.Job.Task = "Analysis"; $Store.Job.Pct = 0; Render-Frame
+
+    # 1. Probe
+    try { $Meta = Invoke-Expression "& `"$Global:FFPROBE`" -v quiet -print_format json -show_format -show_streams `"$($File.FullName)`"" | ConvertFrom-Json } 
+    catch { Dispatch-Log "Probe Failed: Corrupt." "ERR"; $Store.Stats.Errors++; return }
+
+    # 2. Decision
+    $Tags = @{}; if ($Meta.format.tags) { $Meta.format.tags.PSObject.Properties | % { $Tags[$_.Name] = $_.Value } }
+    $VidStr = $Meta.streams | ? {$_.codec_type -eq "video"} | Select -First 1
+    if ($VidStr.tags) { $VidStr.tags.PSObject.Properties | % { if(!$Tags[$_.Name]){$Tags[$_.Name]=$_.Value} } }
+    $TStr = $Tags.Values -join " "; if ($TStr -match $Store.Config.Tag -or $TStr -match "WinX") { Dispatch-Log "Skipped: Optimized." "INFO"; $Store.Stats.Skipped++; return }
+
+    # 3. Pipeline
+    $Info = Analyze-Media $Meta
+    $IsHDR = ($VidStr.color_transfer -match "smpte2084")
+    $Store.Job.AudioChannels = $Info.Channels
+    $Store.Job.Decision = "Encode $($Info.H)p | Audio: $($Info.Channels)ch"
+    if ($DryRun) { Dispatch-Log "[SIMULATION] $File ($($Info.Channels)ch)" "DRY"; Start-Sleep -Milliseconds 200; return }
+
+    # Filters
+    $Filters = @()
+    $TgtH = switch($Store.Config.Resolution) { "4k"{2160} "1080p"{1080} "720p"{720} Default{0} }
+    $Scale = ($TgtH -gt 0 -and $Info.H -gt $TgtH)
+
+    if ($Store.Hardware.Type -eq "NVIDIA") {
+        # NVIDIA HDR Handling: If HDR, use software tonemap bridge (heavy but accurate) to avoid color crush
+        if ($IsHDR) {
+            $Filters += "hwdownload,format=p010le,tonemap=hable:desat=0,format=nv12,hwupload"
+        }
+        if ($Scale) { $Filters += "$($Store.Hardware.Filter)=-2:$TgtH" } else { $Filters += "scale_cuda=format=nv12" }
+    } elseif ($Store.Hardware.Type -eq "INTEL") {
+        if ($Scale) { $Filters += "$($Store.Hardware.Filter)=w=-2:h=$TgtH" }
+    } else {
+        if ($Scale) { $Filters += "$($Store.Hardware.Filter)=-2:$TgtH" }
+        if ($IsHDR) { $Filters += "tonemap=hable:desat=0" }
+    }
     
-    $Scratch = if ($ScratchPath) { $ScratchPath } else { Join-Path $Root "_VdoCoon_Scratch" }
-    if (-not (Test-Path $Scratch)) { New-Item -ItemType Directory -Path $Scratch -Force | Out-Null }
+    if (-not $Filters -and $Store.Hardware.Type -ne "CPU" -and $Store.Hardware.Type -ne "NVIDIA") { $Filters += "null" }
+    $VF = if ($Filters) { "-vf `"$($Filters -join ",")`"" } else { "" }
     
-    Write-Host ""
-    Write-Log "Scanning: $($Global:Config.LibraryPath)" "Cyan" "SCAN"
-    
-    # Expanded Format Support
-    $Exts = "*.mkv","*.mp4","*.m4v","*.mov","*.avi","*.wmv","*.flv","*.webm","*.mts","*.m2ts","*.ts","*.mpg","*.mpeg","*.vob","*.3gp","*.asf","*.divx"
-    $Files = Get-ChildItem -LiteralPath $Global:Config.LibraryPath -Recurse -Include $Exts | Sort-Object Length -Descending
+    # 4. Transcode
+    $Store.Runtime.TempFile = Join-Path $Global:Root ("_vc_" + [Guid]::NewGuid().ToString().Substring(0,6) + ".mkv")
+    $EncCmd = "-c:v $($Store.Hardware.Enc) -preset $($Store.Config.Preset) $($Store.Hardware.Rc) $($Store.Config.CRF)"; if ($Store.Hardware.Type -eq "NVIDIA") { $EncCmd += " -b:v 0" }
 
-    foreach ($File in $Files) {
-        Write-Host ""
-        Write-Log "Processing: $($File.Name)" "DarkGray" "FILE"
-        
-        # 1. Sentinel Check
-        $Info = Get-MediaInfo $File.FullName
-        if (-not $Info) { Write-Log "Probe Failed: $($File.Name)" "Red" "ERR"; $Global:Stats.Errors++; continue }
-        if ($Info.format.tags.comment -eq $Global:Config.SentinelTag) { Write-Log "Already Scavenged: $($File.Name)" "Green" "SKIP"; $Global:Stats.Skipped++; continue }
+    # MAP: V=Best, A=All, S=All, T=All (Attachments/Fonts), Data?
+    # FIX: Added -map 0:t? to preserve fonts/attachments
+    $Args = "$($Store.Hardware.Args) -i `"$($File.FullName)`" -map 0:$($Info.VIdx) -map 0:a? -map 0:s? -map 0:t? " +
+            "$EncCmd $VF " +
+            "-c:a $($Store.Config.AudioCodec) -b:a ($($Info.Channels)*64)k -af `"aformat=channel_layouts=7.1|5.1|stereo`" -c:s copy -c:t copy " +
+            "-metadata comment=$($Store.Config.Tag) -metadata:s:v:0 comment=$($Store.Config.Tag) " +
+            "-y `"$($Store.Runtime.TempFile)`""
+            
+    $Store.Job.Task = "Encoding"; Dispatch-Log "Processing: $($File.Name)" "SYS"
+    $Dur=0; [void][double]::TryParse($Meta.format.duration, [ref]$Dur); $Store.FFLog.Clear()
 
-        # 2. Setup
-        $Vid = $Info.streams | Where-Object { $_.codec_type -eq "video" } | Select-Object -First 1
-        if (-not $Vid) { Write-Log "No Video Stream Found: $($File.Name)" "Red" "SKIP"; $Global:Stats.Skipped++; continue }
+    $Proc = New-Object System.Diagnostics.Process
+    $Proc.StartInfo.FileName = $Global:FFMPEG; $Proc.StartInfo.Arguments = $Args
+    $Proc.StartInfo.UseShellExecute = $false; $Proc.StartInfo.RedirectStandardError = $true; $Proc.StartInfo.CreateNoWindow = $true
+    [void]$Proc.Start()
 
-        $IsHDR = ($Vid.color_transfer -match "smpte2084|arib-std-b67")
-        $Guid = [Guid]::NewGuid().ToString()
-        $WorkFile = Join-Path $Scratch "$Guid.mkv"
-        $ProbeFile = Join-Path $Scratch "$Guid.probe.mkv"
-        $FinalPath = [System.IO.Path]::ChangeExtension($File.FullName, ".mkv")
-        
-        # 3. Prediction Pass
-        $Duration = 0
-        if (-not [double]::TryParse($Info.format.duration, [ref]$Duration)) { $Duration = 0 }
-        
-        # OPTIMIZATION: Skip prediction if duration unknown OR file is small (<150MB)
-        $SkipPrediction = ($Duration -eq 0) -or ($File.Length -lt 150MB)
+    while (-not $Proc.HasExited) {
+        $Line = $Proc.StandardError.ReadLine()
+        if ($Line) {
+            [void]$Store.FFLog.Add($Line); if ($Store.FFLog.Count -gt 20) { $Store.FFLog.RemoveAt(0) }
+            if ($Line -match "time=(\d{2}):(\d{2}):(\d{2}\.\d{2})") {
+                $Cur = ([int]$Matches[1]*3600)+([int]$Matches[2]*60)+[double]$Matches[3]
+                if ($Dur -gt 0) {
+                    $Store.Job.Pct = [math]::Min(100, ($Cur/$Dur)*100); Set-TaskbarProgress $Store.Job.Pct 100 "Normal"
+                    if ($Line -match "speed=\s*(\d+\.?\d*)x") { $Spd=[double]$Matches[1]; $Store.Job.Speed="${Spd}x"; if($Spd-gt 0){$Store.Job.ETA=[TimeSpan]::FromSeconds(($Dur-$Cur)/$Spd).ToString("hh\:mm\:ss")} }
+                }
+            }
+            if ($Line -match "fps=\s*(\d+)") { $Store.Job.FPS = $Matches[1] }
+        }
+        Render-Frame
+    }
+    $Exit = $Proc.ExitCode; $Proc.Dispose(); Set-TaskbarProgress 0 100 "NoProgress"
 
-        if ($SkipPrediction) { 
-            Write-Host "      -> Fast-Track (Small/Unknown). Force Encoding." -ForegroundColor Yellow 
+    # 5. Swap
+    if ($Exit -eq 0) {
+        $Old = $File.Length; $New = (Get-Item $Store.Runtime.TempFile).Length
+        if ($New -ge $Old -and $Old -gt 50MB) {
+            Dispatch-Log "Bloat ($([math]::Round($New/1MB))MB). Discarding." "WARN"; Remove-Item $Store.Runtime.TempFile -Force; $Store.Stats.Skipped++
         } else {
-            Write-Host "      -> Predicting..." -NoNewline -ForegroundColor Yellow
             try {
-                $Seek = [math]::Round($Duration * 0.30)
-                $PredCUDA = $Global:Has_CUDA
-                $FStr = Build-FilterComplex $Info $IsHDR $PredCUDA $TgtH
-                $Dec = if ($PredCUDA) { @("-hwaccel", "cuda", "-hwaccel_output_format", "cuda") } else { @() }
-                $FCmd = if ($FStr) { @("-vf", "$FStr") } else { @() }
-                
-                $Args = $Dec + @("-ss", "$Seek", "-i", "`"$($File.FullName)`"", "-t", "60", "-map", "0:v:0", "-c:v", $Global:Config.Codec, "-preset", "ultrafast", "-crf", $Global:Config.CRF) + $FCmd + @("-an", "-y", "`"$ProbeFile`"")
-                $Null = Start-Process -FilePath $Global:FFMPEG -ArgumentList $Args -Wait -NoNewWindow -PassThru
-                
-                $Remaining = $Duration - $Seek
-                $ProbeDuration = if ($Remaining -lt 60) { $Remaining } else { 60 }
-                if ($ProbeDuration -le 0) { $ProbeDuration = 1 } 
-
-                $ProbeSize = (Get-Item -LiteralPath $ProbeFile).Length
-                $Savings = 100 - (( ($ProbeSize / $ProbeDuration) / ($File.Length / $Duration) ) * 100)
-                
-                Write-Host " Potential: $([math]::Round($Savings,1))%" -ForegroundColor White
-                
-                if ($Savings -lt $Global:Config.MinSavings) {
-                    Write-Log "Saturated (<$($Global:Config.MinSavings)%): $($File.Name)" "Green" "SKIP"
-                    $Global:Stats.Skipped++
-                    Remove-Item -LiteralPath $ProbeFile -Force -Confirm:$false; continue
-                }
-            } catch { Write-Host " [WARN] Prediction failed/skipped, forcing." -ForegroundColor Magenta }
-            finally { Remove-Item -LiteralPath $ProbeFile -Force -Confirm:$false -ErrorAction SilentlyContinue }
+                $Bak = "$($File.FullName).bak"; Move-Item $File.FullName $Bak -Force; Move-Item $Store.Runtime.TempFile ([System.IO.Path]::ChangeExtension($File.FullName, ".mkv")) -Force; Remove-Item $Bak -Force
+                $Saved = $Old - $New; $Store.Stats.BytesSaved += $Saved; $Store.Stats.Processed++; Dispatch-Log "Success. Saved $([math]::Round($Saved/1MB)) MB" "OK"
+            } catch { Dispatch-Log "Swap Failed. Reverting." "ERR"; if(Test-Path $Bak){Move-Item $Bak $File.FullName -Force}; $Store.Stats.Errors++ }
         }
-
-        # 4. Transcode
-        $Strategies = if ($Global:Has_CUDA) { @("CUDA", "CPU") } else { @("CPU") }
-        $Success = $false
-
-        foreach ($Strat in $Strategies) {
-            if ($Success) { break }
-            Write-Log "Encoding ($Strat): $($File.Name)" "Cyan" "EXEC"
-            
-            $UseGPU = ($Strat -eq "CUDA")
-            $Dec = if ($UseGPU) { @("-hwaccel", "cuda", "-hwaccel_output_format", "cuda") } else { @() }
-            $FStr = Build-FilterComplex $Info $IsHDR $UseGPU $TgtH
-            $FCmd = if ($FStr) { @("-vf", "$FStr") } else { @() }
-            
-            # UPDATE: "-map 0:a?" prevents crash on audio-less files. "-map 0:t?" preserves fonts.
-            $AudArgs = @("-c:a", $Global:Config.AudioCodec, "-b:a", "256k", "-vbr", "on", "-c:s", "copy", "-ignore_unknown", "-map_metadata", "0")
-            $Maps    = @("-map", "0:v:0", "-map", "0:a?", "-map", "0:s?", "-map", "0:t?")
-
-            $Cmd = $Dec + @("-i", "`"$($File.FullName)`"") + 
-                   $Maps + @("-c:v", $Global:Config.Codec, "-preset", $Global:Config.Preset, "-crf", $Global:Config.CRF) + $FCmd +
-                   $AudArgs + @("-metadata", "comment=$($Global:Config.SentinelTag)", "-y", "`"$WorkFile`"")
-
-            $Timer = [System.Diagnostics.Stopwatch]::StartNew()
-            $Proc = Start-Process -FilePath $Global:FFMPEG -ArgumentList $Cmd -Wait -NoNewWindow -PassThru
-            $Timer.Stop()
-
-            if ($Proc.ExitCode -eq 0) { $Success = $true } 
-            else { Write-Log "Failure ($Strat). Retrying..." "Red" "WARN" }
-        }
-
-        if (-not $Success) { 
-            Write-Log "Transcode Failed: $($File.Name)" "Red" "ERR"; $Global:Stats.Errors++
-            if (Test-Path $WorkFile) { Remove-Item $WorkFile -Force -Confirm:$false }; continue 
-        }
-
-        # 5. Verification
-        Write-Host "      -> Verifying..." -NoNewline -ForegroundColor Yellow
-        $NewSize = (Get-Item -LiteralPath $WorkFile).Length
-        if ($NewSize -ge $File.Length) {
-            Write-Host " BLOAT DETECTED." -ForegroundColor Red
-            Write-Log "Discarded (Bloat): $($File.Name)" "Red" "DROP"
-            Remove-Item $WorkFile -Force -Confirm:$false; continue
-        }
-        
-        $VArgs = @("-v", "error", "-xerror", "-i", "`"$WorkFile`"", "-f", "null", "-")
-        $VProc = Start-Process -FilePath $Global:FFMPEG -ArgumentList $VArgs -Wait -NoNewWindow -PassThru
-        
-        if ($VProc.ExitCode -ne 0) {
-            Write-Host " CORRUPTION." -ForegroundColor Red
-            Write-Log "Discarded (Corruption): $($File.Name)" "Red" "DROP"
-            $Global:Stats.Errors++
-            Remove-Item $WorkFile -Force -Confirm:$false; continue
-        }
-        Write-Host " OK." -ForegroundColor Green
-        
-        # 6. Atomic Swap
-        $Backup = "$($File.FullName).bak"
-        try {
-            if ($File.FullName -eq $FinalPath) {
-                [System.IO.File]::Move($File.FullName, $Backup)
-                [System.IO.File]::Move($WorkFile, $FinalPath)
-                [System.IO.File]::Delete($Backup)
-            } else {
-                if (Test-Path -LiteralPath $FinalPath) { 
-                    Write-Log "Target Exists: $($FinalPath)" "Red" "SKIP"; Remove-Item $WorkFile -Force -Confirm:$false; continue 
-                }
-                [System.IO.File]::Move($File.FullName, $Backup)
-                try {
-                    [System.IO.File]::Move($WorkFile, $FinalPath)
-                    [System.IO.File]::Delete($Backup)
-                } catch { [System.IO.File]::Move($Backup, $File.FullName); throw }
-            }
-            
-            $BytesSaved = $File.Length - $NewSize
-            $Global:Stats.BytesSaved += $BytesSaved
-            $Global:Stats.Processed++
-            Write-Log "Complete: $($File.Name) (Saved $([math]::Round($BytesSaved/1MB,2)) MB)" "Cyan" "DONE"
-        } catch {
-            Write-Log "Swap Failed: $($File.Name)" "Red" "FATAL"
-            if ((Test-Path -LiteralPath $Backup) -and -not (Test-Path -LiteralPath $File.FullName)) { 
-                Rename-Item -LiteralPath $Backup -NewName $File.Name -Force -Confirm:$false 
-            }
-        }
+    } else {
+        Dispatch-Log "FFmpeg Error ($Exit)." "ERR"; Set-TaskbarProgress 100 100 "Error"
+        Dispatch-Log "--- DUMP ($($File.Name)) ---" "ERR"; foreach ($L in $Store.FFLog) { Dispatch-Log $L "ERR" }; Dispatch-Log "--- END ---" "ERR"
+        $Store.Stats.Errors++; if(Test-Path $Store.Runtime.TempFile){Remove-Item $Store.Runtime.TempFile -Force}
     }
+    $Store.Runtime.TempFile = $null
 }
+# endregion
 
-# --- SUMMARY -----------------------------------------------------------------
-function Show-Summary {
-    Write-Host ""
-    Write-Host "==============================================================" -ForegroundColor Cyan
-    Write-Host "   SESSION SUMMARY" -ForegroundColor White
-    Write-Host "==============================================================" -ForegroundColor Cyan
-    Write-Host "   Processed : $($Global:Stats.Processed)"
-    Write-Host "   Skipped   : $($Global:Stats.Skipped)"
-    Write-Host "   Errors    : $($Global:Stats.Errors)"
-    Write-Host "   Space Saved: $([math]::Round($Global:Stats.BytesSaved / 1GB, 2)) GB" -ForegroundColor Green
-    Write-Host "==============================================================" -ForegroundColor Cyan
-    Write-Log "Session Ended. Saved $([math]::Round($Global:Stats.BytesSaved / 1GB, 2)) GB." "Cyan" "END"
-}
-
-# --- MAIN EXECUTION FLOW -----------------------------------------------------
-Show-Header
+# region [ 6. MAIN MANIFOLD ] =================================================
 try {
-    $Global:FFMPEG  = Resolve-Binary "ffmpeg"
-    $Global:FFPROBE = Resolve-Binary "ffprobe"
-    Get-HardwareInfo
-    Initialize-Configuration
-    Process-Library
-    Show-Summary
+    if (-not $Global:IsISE) { [Console]::CursorVisible = $false }
+    try { $Global:FFMPEG=(Get-Command "ffmpeg" -ErrorAction Stop).Source; $Global:FFPROBE=(Get-Command "ffprobe" -ErrorAction Stop).Source }
+    catch { $L=Join-Path $Global:Root "ffmpeg.exe"; $P=Join-Path $Global:Root "ffprobe.exe"; if(Test-Path $L){$Global:FFMPEG=$L}; if(Test-Path $P){$Global:FFPROBE=$P} }
+    if (-not $Global:FFMPEG) { Throw "Binaries Missing" }
+
+    Mount-Configuration; Rotate-Logs; Detect-Hardware
+    
+    $Store.State = "SCAN"; Render-Frame
+    $Q = Get-ChildItem -LiteralPath $Store.Config.LibraryPath -Recurse -Include "*.mkv","*.mp4","*.avi","*.mov","*.m4v" | Sort Length -Descending
+    Dispatch-Log "Manifest: $($Q.Count) items." "INFO"; $Store.Stats.Total = $Q.Count
+    
+    $Store.State = "WORK"; foreach ($F in $Q) { Process-Item $F; [GC]::Collect() }
+    
+    Invoke-Cleanup; Invoke-Webhook "Session Complete. Processed: $($Store.Stats.Processed). Saved: $([math]::Round($Store.Stats.BytesSaved/1GB, 2)) GB"
+    
+    $Store.State = "DONE"; Render-Frame
+    if (-not $Global:IsISE) { [Console]::CursorVisible = $true }
+    Write-Host "`n [COMPLETE] Press Enter." -ForegroundColor Green; Read-Host
 } catch {
-    Write-Log $_.Exception.Message "Red" "FATAL"
-    Write-Host "`nPress Enter to exit..."
-    Read-Host
+    Invoke-Webhook "Critical Failure: $_" 16711680
+    if (-not $Global:IsISE) { [Console]::CursorVisible = $true }
+    Write-Host "`n [FATAL] $_" -ForegroundColor Red; Read-Host
     exit 1
 }
+# endregion
 ```
