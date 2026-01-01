@@ -3,6 +3,8 @@
 > **The Omniscient Media Sovereign.**  
 > *Autonomic. 10-Bit. Immutable.*
 
+![Screenshot](https://raw.githubusercontent.com/shfqrkhn/VdoCoon/refs/heads/main/%7BCB1CEA86-D664-4411-84BC-C663B18E19B0%7D.jpg)
+
 ## 📑 Table of Contents
 
 1. [System Overview](#-system-overview)
